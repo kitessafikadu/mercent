@@ -6,8 +6,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('Eaglelion API')
-    .setDescription('API documentation for Eaglelion project')
+    .setTitle('Mercent API')
+    .setDescription('API documentation for Mercent project')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
