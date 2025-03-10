@@ -1,42 +1,48 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
   Patch,
-  Param,
   Delete,
+  Body,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-profile.dto';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
+import { UserService } from './user.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { Request } from 'express';
 
+@ApiTags('Users')
+@ApiBearerAuth() // Requires Bearer Token in Swagger
 @Controller('users')
-export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+@UseGuards(JwtAuthGuard) // Protect routes with JWT Authentication
+export class UserController {
+  constructor(private userService: UserService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Get('profile')
+  @ApiOperation({ summary: 'Get logged-in user profile' })
+  @ApiResponse({ status: 200, description: 'User profile retrieved' })
+  getProfile(@Req() req: Request) {
+    return this.userService.getProfile(req.user['userId']);
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @Patch('update-profile')
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiResponse({ status: 200, description: 'User profile updated' })
+  updateProfile(@Req() req: Request, @Body() dto: UpdateProfileDto) {
+    return this.userService.updateProfile(req.user['userId'], dto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Delete('delete-account')
+  @ApiOperation({ summary: 'Delete user account' })
+  @ApiResponse({ status: 200, description: 'User account deleted' })
+  deleteAccount(@Req() req: Request) {
+    return this.userService.deleteAccount(req.user['userId']);
   }
 }
