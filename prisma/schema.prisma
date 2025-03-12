@@ -19,6 +19,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Users
 model User {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   fullName    String
@@ -44,3 +45,51 @@ enum UserStatus {
   INACTIVE
   DEACTIVATED
 }
+
+// Products and listings
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  subcategories Subcategory[]
+  products    Product[]
+}
+
+model Subcategory {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  categoryId  Int
+  category    Category  @relation(fields: [categoryId], references: [id])
+  products    Product[]
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  categoryId  Int
+  subcategoryId Int?
+  category    Category  @relation(fields: [categoryId], references: [id])
+  subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model Service {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float?
+  category    String
+  providerId  Int
+  provider    User      @relation(fields: [providerId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+// model User {
+//   id        Int      @id @default(autoincrement())
+//   name      String
+//   email     String   @unique
+//   password  String
+//   services  Service[]
+// }
