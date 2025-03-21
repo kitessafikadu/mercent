@@ -19,7 +19,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Users
 model User {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   fullName    String
@@ -31,8 +30,10 @@ model User {
   userType    UserType
   userStatus  UserStatus
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt  // Auto-updates on modification
+  updatedAt   DateTime @updatedAt  
+  // services    Service[]
 }
+
 
 enum UserType {
   MERCHANT
@@ -45,51 +46,42 @@ enum UserStatus {
   INACTIVE
   DEACTIVATED
 }
-
-// Products and listings
-
-model Category {
-  id          Int        @id @default(autoincrement())
-  name        String     @unique
-  subcategories Subcategory[]
-  products    Product[]
+enum ListingType{
+  SELL
+  RENT
+  SERVICE
 }
 
-model Subcategory {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique
-  categoryId  Int
-  category    Category  @relation(fields: [categoryId], references: [id])
-  products    Product[]
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  subcategories SubCategory[]
+  attributes  Json  // Store attributes as JSON (Common attributes)
+}
+
+model SubCategory {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  categoryId  String   @db.ObjectId
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subSubcategories SubSubCategory[]
+}
+
+model SubSubCategory {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  subCategoryId String @db.ObjectId
+  subCategory  SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  attributes   Json  // Store attributes as JSON (Specific attributes)
+  products     Product[]
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  categoryId  Int
-  subcategoryId Int?
-  category    Category  @relation(fields: [categoryId], references: [id])
-  subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
-  createdAt   DateTime  @default(now())
+  id             String  @id @default(auto()) @map("_id")   @db.ObjectId
+  name           String
+  subSubcategoryId String @db.ObjectId
+  subSubcategory  SubSubCategory @relation(fields: [subSubcategoryId], references: [id], onDelete: Cascade)
+  price          Float
+  listingType    ListingType
+  attributes     Json  // Inherits from Category + SubSubCategory
 }
-
-model Service {
-  id          Int       @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float?
-  category    String
-  providerId  Int
-  provider    User      @relation(fields: [providerId], references: [id])
-  createdAt   DateTime  @default(now())
-}
-
-// model User {
-//   id        Int      @id @default(autoincrement())
-//   name      String
-//   email     String   @unique
-//   password  String
-//   services  Service[]
-// }

@@ -13,26 +13,47 @@ export class AuthService {
   ) {}
 
   async signup(dto: SignupDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingUser) {
+      throw new HttpException('Email already in use', HttpStatus.CONFLICT);
+    }
+
     const hashedPassword = await bcrypt.hash(dto.password, 10);
+
     const user = await this.prisma.user.create({
       data: {
-        ...dto,
+        fullName: dto.fullName,
+        email: dto.email,
         password: hashedPassword,
+        phoneNumber: dto.phoneNumber,
+        address: dto.address,
         userType: 'USER',
         userStatus: 'INACTIVE',
       },
     });
+
     return { message: 'User registered successfully', user };
   }
 
   async signin(dto: SigninDto) {
+    // Find user by email
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
+
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
-    const token = this.jwtService.sign({ userId: user.id, email: user.email });
+
+    // Generate JWT token
+    const token = this.jwtService.sign({
+      userId: user.id,
+      email: user.email,
+    });
+
     return { message: 'Login successful', token };
   }
 }

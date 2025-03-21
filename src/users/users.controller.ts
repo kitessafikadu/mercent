@@ -40,7 +40,6 @@ export class UsersController {
     @Req() req: Request & { user: any },
     @Body() dto: UpdateProfileDto,
   ) {
-    // Fix here
     return this.usersService.updateProfile(req.user.userId, dto);
   }
 
