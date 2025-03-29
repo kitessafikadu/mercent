@@ -22,8 +22,8 @@ export class SubSubCategoriesService {
       data: {
         name: data.name,
         attributes: data.attributes
-          ? JSON.stringify(data.attributes)
-          : undefined, // Store as JSON string
+          ? JSON.stringify(data.attributes) // Ensure it's stored as a JSON string
+          : '[]', // Default to an empty JSON array
         subCategory: data.subCategoryId
           ? { connect: { id: data.subCategoryId } }
           : undefined,
@@ -46,15 +46,16 @@ export class SubSubCategoriesService {
   }
 
   async findAll() {
-    const subSubCategories = await this.prisma.subSubCategory.findMany({
-      include: { subCategory: true },
+    const categories = await this.prisma.subSubCategory.findMany({
+      include: {
+        subCategory: true, // Ensure subCategory is included
+      },
     });
 
-    return subSubCategories.map((subSubCategory) => ({
-      ...subSubCategory,
-      attributes: subSubCategory.attributes
-        ? JSON.parse(subSubCategory.attributes as string)
-        : [],
+    return categories.map((category) => ({
+      ...category,
+      attributes: JSON.parse(category.attributes as string),
+      subCategory: category.subCategory ?? {}, // Ensure it's not null
     }));
   }
 

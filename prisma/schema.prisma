@@ -41,23 +41,30 @@ enum UserType {
   ADMIN
 }
 
+
 enum UserStatus {
   ACTIVE
   INACTIVE
   DEACTIVATED
 }
+
+
 enum ListingType{
   SELL
   RENT
   SERVICE
 }
 
+
 model Category {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String   @unique
   subcategories SubCategory[]
-  attributes  Json  // Store attributes as JSON (Common attributes)
+  attributes  Json?  // Store attributes as JSON (Common attributes)
 }
+
+
+
 
 model SubCategory {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -67,14 +74,21 @@ model SubCategory {
   subSubcategories SubSubCategory[]
 }
 
+
+
+
+
 model SubSubCategory {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   name         String
-  subCategoryId String @db.ObjectId
-  subCategory  SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
-  attributes   Json  // Store attributes as JSON (Specific attributes)
+  subCategoryId String? @db.ObjectId
+  subCategory  SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  attributes   Json?
   products     Product[]
 }
+
+
+
 
 model Product {
   id             String  @id @default(auto()) @map("_id")   @db.ObjectId

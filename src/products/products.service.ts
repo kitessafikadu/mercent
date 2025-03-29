@@ -19,9 +19,13 @@ export class ProductsService {
     try {
       const product = await this.prisma.product.create({
         data: {
-          ...data,
+          name: data.name,
+          price: data.price,
           listingType: data.listingType as ListingType, // Cast to ListingType
           attributes: data.attributes || {},
+
+          // Corrected Relation: Connect existing subSubcategory
+          subSubcategory: { connect: { id: data.subSubcategoryId } },
         },
       });
 

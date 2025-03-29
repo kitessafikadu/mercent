@@ -39,6 +39,6 @@ export class AttributesController {
   // ✅ Get combined attributes (Main Category + SubSubCategory)
   @Get('subcategory/:subSubcategoryId')
   getCombinedAttributes(@Param('subSubcategoryId') subSubcategoryId: string) {
-    return this.attributesService.getCombinedAttributes(subSubcategoryId);
+    // return this.attributesService.getCombinedAttributes(subSubcategoryId);
   }
 }

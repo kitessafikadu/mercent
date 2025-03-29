@@ -48,27 +48,27 @@ export class AttributesService {
   }
 
   // ✅ Get combined attributes (Main Category + SubSubCategory)
-  async getCombinedAttributes(subSubcategoryId: string) {
-    const subSubcategory = await this.prisma.subSubCategory.findUnique({
-      where: { id: subSubcategoryId },
-      include: { subCategory: { include: { category: true } } },
-    });
+  // async getCombinedAttributes(subSubcategoryId: string) {
+  //   const subSubcategory = await this.prisma.subSubCategory.findUnique({
+  //     where: { id: subSubcategoryId },
+  //     include: { subCategory: { include: { category: true } } },
+  //   });
 
-    if (!subSubcategory)
-      throw new NotFoundException('Sub-subcategory not found');
+  //   if (!subSubcategory)
+  //     throw new NotFoundException('Sub-subcategory not found');
 
-    // Get attributes from the main category and sub-subcategory
-    const mainCategoryAttributes =
-      subSubcategory.subCategory.category.attributes || {};
-    const subSubCategoryAttributes = subSubcategory.attributes || {};
+  //   // Get attributes from the main category and sub-subcategory
+  //   const mainCategoryAttributes =
+  //     subSubcategory.subCategory.category.attributes || {};
+  //   const subSubCategoryAttributes = subSubcategory.attributes || {};
 
-    return {
-      ...(typeof mainCategoryAttributes === 'object'
-        ? mainCategoryAttributes
-        : {}),
-      ...(typeof subSubCategoryAttributes === 'object'
-        ? subSubCategoryAttributes
-        : {}),
-    };
-  }
+  //   return {
+  //     ...(typeof mainCategoryAttributes === 'object'
+  //       ? mainCategoryAttributes
+  //       : {}),
+  //     ...(typeof subSubCategoryAttributes === 'object'
+  //       ? subSubCategoryAttributes
+  //       : {}),
+  //   };
+  // }
 }
