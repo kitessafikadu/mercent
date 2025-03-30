@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -10,6 +11,9 @@ import { SubSubCategoriesModule } from './subsubcategories/subsubcategories.modu
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // Ensures ConfigModule is available across all modules
+    }),
     AuthModule,
     CategoriesModule,
     SubCategoriesModule,
