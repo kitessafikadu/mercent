@@ -10,6 +10,7 @@ import {
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
@@ -21,7 +22,7 @@ export class CategoriesController {
 
   @Get()
   findAll() {
-    return this.categoriesService.findAll();
+    return this.categoriesService.findAll(); // Fetches all categories with subcategories & sub-subcategories
   }
 
   @Get(':id')

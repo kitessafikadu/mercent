@@ -11,34 +11,70 @@ export class CategoriesService {
     return this.prisma.category.create({
       data: {
         ...data,
-        attributes: data.attributes ?? {}, // Ensure attributes is always a valid JSON object
+        attributes: data.attributes ? JSON.stringify(data.attributes) : '{}',
       },
     });
   }
 
   async findAll() {
     const categories = await this.prisma.category.findMany({
-      include: { subcategories: true },
+      include: {
+        subcategories: {
+          include: { subSubcategories: true },
+        },
+      },
     });
 
     return categories.map((category) => ({
       ...category,
-      attributes: category.attributes ?? {}, // Replace null with an empty object
+      attributes:
+        typeof category.attributes === 'string'
+          ? JSON.parse(category.attributes)
+          : category.attributes || {},
     }));
   }
 
   async findOne(id: string) {
-    return this.prisma.category.findUnique({
+    const category = await this.prisma.category.findUnique({
       where: { id },
-      include: { subcategories: true },
+      include: {
+        subcategories: {
+          include: { subSubcategories: true },
+        },
+      },
     });
+
+    return category;
   }
 
   async update(id: string, data: UpdateCategoryDto) {
-    return this.prisma.category.update({ where: { id }, data });
+    const existingCategory = await this.prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!existingCategory) {
+      throw new Error('Category not found');
+    }
+
+    return this.prisma.category.update({
+      where: { id },
+      data: {
+        name: data.name || existingCategory.name,
+        attributes: data.attributes
+          ? data.attributes
+          : existingCategory.attributes,
+      },
+    });
   }
 
   async remove(id: string) {
+    console.log('Deleting Category ID:', id);
+
+    await this.prisma.subSubCategory.deleteMany({
+      where: { subCategory: { categoryId: id } },
+    });
+    await this.prisma.subCategory.deleteMany({ where: { categoryId: id } });
+
     return this.prisma.category.delete({ where: { id } });
   }
 }
