@@ -11,7 +11,7 @@ export class CategoriesService {
     return this.prisma.category.create({
       data: {
         ...data,
-        attributes: data.attributes ? JSON.stringify(data.attributes) : '{}',
+        attributes: data.attributes ? data.attributes : [],
       },
     });
   }

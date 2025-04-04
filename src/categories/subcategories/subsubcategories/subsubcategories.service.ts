@@ -46,13 +46,11 @@ export class SubSubCategoriesService {
       try {
         return {
           ...subSubCategory,
-          attributes: subSubCategory.attributes
-            ? JSON.parse(subSubCategory.attributes as string)
-            : [],
+          attributes: subSubCategory.attributes || [],
         };
       } catch (error) {
         console.error(
-          `Failed to parse attributes for subSubCategory ${subSubCategory.id}:`,
+          `Failed to process attributes for subSubCategory ${subSubCategory.id}:`,
           subSubCategory.attributes,
         );
         return {
