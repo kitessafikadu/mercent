@@ -1,31 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/auth/prisma/prisma.service';
-import { CreateSubCategoryDto } from './dto/create-subcategory.dto';
-import { UpdateSubCategoryDto } from './dto/update-subcategory.dto';
+import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
+import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
+
 @Injectable()
-export class SubCategoriesService {
+export class SubcategoriesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateSubCategoryDto) {
-    return this.prisma.subCategory.create({ data });
-  }
-
-  async findAll() {
-    return this.prisma.subCategory.findMany({ include: { category: true } });
-  }
-
-  async findOne(id: string) {
-    return this.prisma.subCategory.findUnique({
-      where: { id },
-      include: { category: true },
+  create(dto: CreateSubcategoryDto) {
+    return this.prisma.subcategory.create({
+      data: dto,
     });
   }
 
-  async update(id: string, data: UpdateSubCategoryDto) {
-    return this.prisma.subCategory.update({ where: { id }, data });
+  findAll() {
+    return this.prisma.subcategory.findMany({
+      include: {
+        children: true, // Include child subcategories for recursion
+      },
+    });
   }
 
-  async remove(id: string) {
-    return this.prisma.subCategory.delete({ where: { id } });
+  findOne(id: string) {
+    return this.prisma.subcategory.findUnique({
+      where: { id },
+      include: {
+        children: true, // Include child subcategories for recursion
+      },
+    });
+  }
+
+  update(id: string, dto: UpdateSubcategoryDto) {
+    return this.prisma.subcategory.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  remove(id: string) {
+    return this.prisma.subcategory.delete({
+      where: { id },
+    });
   }
 }

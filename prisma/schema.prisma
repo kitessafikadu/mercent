@@ -59,8 +59,8 @@ model Subcategory {
   category    Category       @relation("RootCategorySubcategories", fields: [categoryId], references: [id], onDelete: Cascade)
 
   parentId    String?        
-  parent      Subcategory?   @relation("SubcategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  children    Subcategory[]  @relation("SubcategoryHierarchy", onDelete: Cascade, onUpdate: Cascade)
+  parent      Subcategory?   @relation("SubcategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    Subcategory[]  @relation("SubcategoryHierarchy")  // ✅ Removed `onDelete` & `onUpdate` here
 
   products    Product[]
 
@@ -76,8 +76,9 @@ model Product {
   attributes     Json
 
   subcategoryId  String       @db.ObjectId
-  subcategory    Subcategory  @relation(fields: [subcategoryId], references: [id], onDelete: Cascade)
+  subcategory    Subcategory  @relation(fields: [subcategoryId], references: [id], onDelete: NoAction) // ✅ Fixed cyclic dependency
 
   userId         String       @db.ObjectId
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+

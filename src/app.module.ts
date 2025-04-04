@@ -7,7 +7,6 @@ import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SubCategoriesModule } from './subcategories/subcategories.module';
-import { SubSubCategoriesModule } from './subsubcategories/subsubcategories.module';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { SubSubCategoriesModule } from './subsubcategories/subsubcategories.modu
     ProductsModule,
     CategoriesModule,
     SubCategoriesModule,
-    SubSubCategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -30,8 +30,8 @@ export class AuthService {
         password: hashedPassword,
         phoneNumber: dto.phoneNumber,
         address: dto.address,
-        userType: 'USER',
-        userStatus: 'INACTIVE',
+        userType: dto.userType,
+        userStatus: 'ACTIVE',
       },
     });
 
@@ -52,6 +52,7 @@ export class AuthService {
     const token = this.jwtService.sign({
       userId: user.id,
       email: user.email,
+      userType: user.userType,
     });
 
     return { message: 'Login successful', token };
