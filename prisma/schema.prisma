@@ -31,7 +31,8 @@ model User {
   userStatus  UserStatus
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt  
-  // services    Service[]
+  products    Product[] // A user can create multiple products
+  // listings    Listing[]
 }
 
 
@@ -63,20 +64,14 @@ model Category {
   attributes  Json?  // Store attributes as JSON (Common attributes)
 }
 
-
-
-
 model SubCategory {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  categoryId  String   @db.ObjectId
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  categoryId   String   @db.ObjectId
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  attributes   Json?  // Stores category-specific attributes
   subSubcategories SubSubCategory[]
 }
-
-
-
-
 
 model SubSubCategory {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -87,15 +82,14 @@ model SubSubCategory {
   products     Product[]
 }
 
-
-
-
 model Product {
-  id             String  @id @default(auto()) @map("_id")   @db.ObjectId
-  name           String
-  subSubcategoryId String @db.ObjectId
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  subSubcategoryId String   @db.ObjectId
   subSubcategory  SubSubCategory @relation(fields: [subSubcategoryId], references: [id], onDelete: Cascade)
   price          Float
   listingType    ListingType
-  attributes     Json  // Inherits from Category + SubSubCategory
+  attributes     Json  
+  userId        String   @db.ObjectId // Reference to the User model
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
