@@ -11,13 +11,20 @@ export class CategoriesService {
     return this.prisma.category.create({
       data: {
         ...data,
-        attributes: data.attributes || {}, // Ensure attributes is always valid JSON
+        attributes: data.attributes ?? {}, // Ensure attributes is always a valid JSON object
       },
     });
   }
 
   async findAll() {
-    return this.prisma.category.findMany({ include: { subcategories: true } });
+    const categories = await this.prisma.category.findMany({
+      include: { subcategories: true },
+    });
+
+    return categories.map((category) => ({
+      ...category,
+      attributes: category.attributes ?? {}, // Replace null with an empty object
+    }));
   }
 
   async findOne(id: string) {

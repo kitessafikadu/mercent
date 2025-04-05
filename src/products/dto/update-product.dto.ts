@@ -1,7 +1,8 @@
 export class UpdateProductDto {
   name?: string;
-  subSubcategoryId?: string;
+  subcategoryId?: string;
   price?: number;
   listingType?: 'SALE' | 'RENT' | 'SERVICE';
   attributes?: Record<string, any>;
+  userId: string;
 }

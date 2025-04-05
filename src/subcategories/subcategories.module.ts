@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { SubCategoriesService } from './subcategories.service';
-import { SubCategoriesController } from './subcategories.controller';
+import { SubcategoriesService } from './subcategories.service';
+import { SubcategoriesController } from './subcategories.controller';
 import { PrismaService } from 'src/auth/prisma/prisma.service';
 
 @Module({
-  controllers: [SubCategoriesController],
-  providers: [SubCategoriesService, PrismaService],
-  exports: [SubCategoriesService],
+  controllers: [SubcategoriesController],
+  providers: [SubcategoriesService, PrismaService],
+  exports: [SubcategoriesService],
 })
 export class SubCategoriesModule {}

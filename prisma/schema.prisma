@@ -1,15 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -31,9 +19,8 @@ model User {
   userStatus  UserStatus
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt  
-  // services    Service[]
+  products    Product[]
 }
-
 
 enum UserType {
   MERCHANT
@@ -46,42 +33,52 @@ enum UserStatus {
   INACTIVE
   DEACTIVATED
 }
-enum ListingType{
+
+enum ListingType {
   SELL
   RENT
   SERVICE
 }
 
 model Category {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String   @unique
-  subcategories SubCategory[]
-  attributes  Json  // Store attributes as JSON (Common attributes)
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  name          String        @unique
+  subcategories Subcategory[] @relation("RootCategorySubcategories")
+  attributes    Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
-model SubCategory {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+model Subcategory {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
   name        String
-  categoryId  String   @db.ObjectId
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  subSubcategories SubSubCategory[]
-}
+  description String?
+  attributes  Json?
 
-model SubSubCategory {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  subCategoryId String @db.ObjectId
-  subCategory  SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
-  attributes   Json  // Store attributes as JSON (Specific attributes)
-  products     Product[]
+  categoryId  String
+  category    Category       @relation("RootCategorySubcategories", fields: [categoryId], references: [id], onDelete: Cascade)
+
+  parentId    String?        
+  parent      Subcategory?   @relation("SubcategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    Subcategory[]  @relation("SubcategoryHierarchy")  // ✅ Removed `onDelete` & `onUpdate` here
+
+  products    Product[]
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 model Product {
-  id             String  @id @default(auto()) @map("_id")   @db.ObjectId
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
   name           String
-  subSubcategoryId String @db.ObjectId
-  subSubcategory  SubSubCategory @relation(fields: [subSubcategoryId], references: [id], onDelete: Cascade)
   price          Float
   listingType    ListingType
-  attributes     Json  // Inherits from Category + SubSubCategory
+  attributes     Json
+
+  subcategoryId  String       @db.ObjectId
+  subcategory    Subcategory  @relation(fields: [subcategoryId], references: [id], onDelete: NoAction) // ✅ Fixed cyclic dependency
+
+  userId         String       @db.ObjectId
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
