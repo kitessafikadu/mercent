@@ -8,6 +8,7 @@ import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SubCategoriesModule } from './subcategories/subcategories.module';
 import { OrdersModule } from './orders/orders.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
