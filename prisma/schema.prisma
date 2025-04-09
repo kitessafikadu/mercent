@@ -20,6 +20,7 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt  
   products    Product[]
+  orders      Order[] @relation("UserOrders")
 }
 
 enum UserType {
@@ -72,6 +73,8 @@ model Product {
   id             String       @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   price          Float
+  description    String?
+  imageUrl       String?
   listingType    ListingType
   attributes     Json
 
@@ -80,5 +83,30 @@ model Product {
 
   userId         String       @db.ObjectId
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders      Order[] @relation("ProductOrders")
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Order {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId       String       @db.ObjectId
+  productId     String       @db.ObjectId
+  status        orderStatus  @default(PENDING)
+  totalAmount   Float
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  buyer         User         @relation("UserOrders", fields: [buyerId], references: [id])
+  product       Product      @relation("ProductOrders",fields: [productId], references: [id])
+}
+
+enum orderStatus{
+PENDING
+PAID
+SHIPPED
+COMPLETED
+CANCELLED
 }
 
