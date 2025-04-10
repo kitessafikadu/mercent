@@ -13,7 +13,10 @@ import { ListingType } from '@prisma/client';
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateProductDto) {
+  async create(data: CreateProductDto & { imageUrl?: string }) {
+    // Force conversion to number in case it comes as string
+    data.price = Number(data.price);
+
     if (
       !data.name ||
       !data.price ||
@@ -29,7 +32,7 @@ export class ProductsService {
       );
     }
 
-    if (typeof data.price !== 'number' || data.price <= 0) {
+    if (isNaN(data.price) || data.price <= 0) {
       throw new BadRequestException('Price must be a positive number');
     }
 
@@ -63,6 +66,8 @@ export class ProductsService {
           listingType: data.listingType as ListingType,
           attributes,
           subSubcategoryId: data.subSubcategoryId,
+          description: data.description || '',
+          imageUrl: data.imageUrl || null,
         },
       });
 
@@ -88,6 +93,7 @@ export class ProductsService {
       throw new InternalServerErrorException('Failed to create product');
     }
   }
+
   async findAll() {
     return this.prisma.product.findMany();
   }
@@ -104,7 +110,8 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, data: UpdateProductDto) {
+  async update(id: string, data: UpdateProductDto & { imageUrl?: string }) {
+    // Validate listing type if provided
     if (
       data.listingType &&
       !Object.values(ListingType).includes(data.listingType as ListingType)
@@ -114,16 +121,48 @@ export class ProductsService {
       );
     }
 
+    // Validate attributes if provided
+    let attributes = {};
+    if (data.attributes) {
+      try {
+        // Ensure attributes is a valid object
+        attributes =
+          typeof data.attributes === 'object'
+            ? data.attributes
+            : JSON.parse(data.attributes);
+      } catch (error) {
+        throw new BadRequestException('Invalid attributes format');
+      }
+    }
+
+    // Ensure price is a valid float number (if provided)
+    let price: number | undefined;
+    if (data.price) {
+      price =
+        typeof data.price === 'string' ? parseFloat(data.price) : data.price;
+      if (isNaN(price)) {
+        throw new BadRequestException(
+          'Invalid price format. Price must be a valid number.',
+        );
+      }
+    }
+
+    // Prepare the data object for updating the product
+    const updateData: any = {
+      name: data.name,
+      subSubcategoryId: data.subSubcategoryId,
+      price: price,
+      listingType: data.listingType as ListingType,
+      attributes: Object.keys(attributes).length ? attributes : undefined, // Only set if attributes are provided
+      description: data.description || undefined, // Keep existing description if not provided
+      imageUrl: data.imageUrl || undefined, // Keep existing image URL if not provided
+    };
+
     try {
+      // Perform the update operation
       return this.prisma.product.update({
         where: { id },
-        data: {
-          name: data.name,
-          subSubcategoryId: data.subSubcategoryId,
-          price: data.price,
-          listingType: data.listingType as ListingType,
-          attributes: data.attributes ? { ...data.attributes } : undefined,
-        },
+        data: updateData,
       });
     } catch (error) {
       throw new InternalServerErrorException(

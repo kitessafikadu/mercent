@@ -3,6 +3,8 @@ import { IsString, IsOptional, IsObject } from 'class-validator';
 export class CreateCategoryDto {
   @IsString()
   name: string;
+  description?: string;
+  imageUrl?: string;
 
   @IsOptional()
   @IsObject()

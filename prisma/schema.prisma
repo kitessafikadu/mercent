@@ -55,13 +55,15 @@ enum ListingType{
   SERVICE
 }
 
-
 model Category {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String   @unique
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  name          String         @unique
   subcategories SubCategory[]
-  attributes  Json?  // Store attributes as JSON (Common attributes)
+  attributes    Json?
+  imageUrl      String?        // Add this
+  description   String?        // Add this
 }
+
 
 
 
@@ -98,4 +100,6 @@ model Product {
   price          Float
   listingType    ListingType
   attributes     Json  // Inherits from Category + SubSubCategory
+  imageUrl      String?        // Add this
+  description   String?        // Add this
 }
