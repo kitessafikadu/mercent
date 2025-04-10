@@ -107,7 +107,8 @@ model Order {
   buyerId       String       @db.ObjectId
   productId     String       @db.ObjectId
   status        OrderStatus  @default(PENDING)
-  totalAmount   Float
+  totalAmount   Float 
+  quantity      Int
   paymentStatus PaymentStatus @default(PENDING)  // New field to track payment status
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
