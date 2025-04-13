@@ -14,7 +14,7 @@ export class CloudinaryService {
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
   }
-  async uploadImage(file: Multer.File, folder = 'uploads') {
+  async uploadImage(file: Express.Multer.File, folder = 'uploads') {
     const result = await cloudinary.uploader.upload(file.path, {
       folder,
     });

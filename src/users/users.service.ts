@@ -21,7 +21,7 @@ export class UsersService {
     if (dto.profilePic) {
       // Upload the new profile picture to Cloudinary
       const profilePicUrl = await this.cloudinaryService.uploadImage(
-        dto.profilePic,
+        { path: dto.profilePic } as Express.Multer.File,
         'users',
       );
       dto.profilePic = profilePicUrl; // Set the profile picture URL in the DTO
