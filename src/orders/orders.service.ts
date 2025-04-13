@@ -10,7 +10,7 @@ import { OrderStatus } from '@prisma/client';
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
-  async createOrder(buyerId: string, productId: string) {
+  async createOrder(buyerId: string, productId: string, quantity: number) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
     });
@@ -20,11 +20,15 @@ export class OrderService {
       throw new BadRequestException('Only ecommerce products can be ordered');
     }
 
+    // Calculate the total amount based on the quantity
+    const totalAmount = product.price * quantity;
+
     return this.prisma.order.create({
       data: {
         buyerId,
         productId,
-        totalAmount: product.price,
+        totalAmount,
+        quantity, // Include the quantity in the order data
       },
     });
   }

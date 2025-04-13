@@ -17,17 +17,6 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
-    // If profile picture is uploaded
-    if (dto.profilePic) {
-      // Upload the new profile picture to Cloudinary
-      const profilePicUrl = await this.cloudinaryService.uploadImage(
-        { path: dto.profilePic } as Express.Multer.File,
-        'users',
-      );
-      dto.profilePic = profilePicUrl; // Set the profile picture URL in the DTO
-    }
-
-    // Update user profile
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: { ...dto },
