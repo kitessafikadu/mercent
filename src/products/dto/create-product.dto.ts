@@ -33,10 +33,10 @@ export class CreateProductDto {
   @ApiProperty({
     description: 'The listing type of the product',
     enum: ListingType,
-    example: 'SELL',
+    example: 'ECOMMERCE',
   })
   @IsEnum(ListingType)
-  listingType: ListingType; // Use the Prisma enum type
+  listingType: ListingType;
 
   @ApiProperty({
     description: 'Additional attributes of the product',
@@ -53,4 +53,14 @@ export class CreateProductDto {
   })
   @IsString()
   userId: string;
+
+  @ApiProperty({
+    description: 'Image URL of the product stored in Cloudinary',
+    example:
+      'https://res.cloudinary.com/demo/image/upload/v1234567890/products/productA.jpg',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
