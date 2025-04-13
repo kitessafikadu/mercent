@@ -21,4 +21,13 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  @ApiProperty({
+    example:
+      'https://res.cloudinary.com/your-cloud-name/image/upload/v12345/profile-pic.jpg',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  profilePic?: string; // Field to hold profile picture URL
 }
