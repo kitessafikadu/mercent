@@ -21,6 +21,7 @@ export class ProductsService {
         data: {
           name: data.name,
           price: data.price,
+          imageUrl: data.imageUrl,
           listingType: data.listingType as ListingType, // Cast to ListingType
           attributes: data.attributes || {},
 
@@ -99,6 +100,7 @@ export class ProductsService {
           price: data.price,
           listingType: data.listingType as ListingType,
           attributes: data.attributes ? { ...data.attributes } : undefined,
+          imageUrl: data.imageUrl,
         },
       });
     } catch (error) {
