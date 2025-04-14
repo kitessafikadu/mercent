@@ -97,8 +97,8 @@ model Product {
 
   userId         String       @db.ObjectId
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders      Order[] @relation("ProductOrders")
   cartItems   CartItem[] @relation("ProductCartItems")
+  orderItems  OrderItem[] @relation(fields: [], references: [])
 
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -119,22 +119,33 @@ model CartItem {
   productId String   @db.ObjectId
   quantity  Int      @default(1)
 
+  cart      Cart     @relation(fields: [cartId], references: [id]) // Added opposite relation field
   product   Product  @relation("ProductCartItems", fields: [productId], references: [id])
 }
 
 model Order {
-  id            String       @id @default(auto()) @map("_id") @db.ObjectId
-  buyerId       String       @db.ObjectId
-  productId     String       @db.ObjectId
-  status        OrderStatus  @default(PENDING)
-  totalAmount   Float 
-  quantity      Int
-  paymentStatus PaymentStatus @default(PENDING)  // New field to track payment status
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId        String         @db.ObjectId
+  status         OrderStatus    @default(PENDING)
+  totalAmount    Float
+  paymentStatus  PaymentStatus  @default(PENDING)
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  buyer         User         @relation("UserOrders", fields: [buyerId], references: [id])
-  product       Product      @relation("ProductOrders", fields: [productId], references: [id])
+  buyer          User           @relation("UserOrders", fields: [buyerId], references: [id])
+  items          OrderItem[]    // ➕ A list of items in the order
+}
+
+model OrderItem {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId    String   @db.ObjectId
+  productId  String   @db.ObjectId
+  quantity   Int
+  price      Float
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id])
 }
 
 enum OrderStatus {
@@ -150,6 +161,7 @@ enum PaymentStatus {
   SUCCESS
   FAILED
 }
+
 
 
 
