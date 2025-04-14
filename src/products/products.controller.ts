@@ -14,7 +14,10 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import * as multer from 'multer';
+import { ApiConsumes, ApiBody, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Products')
 @Controller('products')
 export class ProductsController {
   constructor(
@@ -23,19 +26,22 @@ export class ProductsController {
   ) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('image')) // Handle image upload
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: CreateProductDto })
+  @UseInterceptors(
+    FileInterceptor('imageUrl', { storage: multer.memoryStorage() }),
+  )
   async create(
     @Body() createProductDto: CreateProductDto,
-    @UploadedFile() file: Express.Multer.File, // Get uploaded image
+    @UploadedFile() file: Express.Multer.File,
   ) {
     let imageUrl: string | undefined;
     if (file) {
       imageUrl = await this.cloudinaryService.uploadImage(file, 'products');
     }
-    // Pass the imageUrl to the service
     return this.productsService.create({
       ...createProductDto,
-      imageUrl, // Attach the image URL if an image was uploaded
+      imageUrl,
     });
   }
 
@@ -50,10 +56,15 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UpdateProductDto })
+  @UseInterceptors(
+    FileInterceptor('image', { storage: multer.memoryStorage() }),
+  )
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @UploadedFile() file: Express.Multer.File, // Handle image upload for update
+    @UploadedFile() file: Express.Multer.File,
   ) {
     let imageUrl: string | undefined;
     if (file) {
@@ -61,7 +72,7 @@ export class ProductsController {
     }
     return this.productsService.update(id, {
       ...updateProductDto,
-      imageUrl, // Attach the new image URL if an image was uploaded
+      imageUrl,
     });
   }
 

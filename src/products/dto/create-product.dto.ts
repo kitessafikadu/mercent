@@ -1,4 +1,3 @@
-import { ListingType } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
@@ -7,60 +6,81 @@ import {
   IsOptional,
   IsObject,
 } from 'class-validator';
+import { ListingType, BrokerageType } from '@prisma/client';
 
 export class CreateProductDto {
   @ApiProperty({
+    example: 'iPhone 14 Pro',
     description: 'The name of the product',
-    example: 'Product A',
   })
   @IsString()
   name: string;
 
   @ApiProperty({
-    description: 'The ID of the subcategory the product belongs to',
-    example: 'subcategory-id',
-  })
-  @IsString()
-  subcategoryId: string;
-
-  @ApiProperty({
-    description: 'The price of the product',
-    example: 100.0,
+    example: 1299.99,
+    description: 'Price of the product in USD',
   })
   @IsNumber()
   price: number;
 
   @ApiProperty({
-    description: 'The listing type of the product',
+    example: 'Latest Apple smartphone with advanced features.',
+    description: 'Detailed product description',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
     enum: ListingType,
-    example: 'ECOMMERCE',
+    example: ListingType.ECOMMERCE,
+    description:
+      'Defines whether the product is for direct sale, brokerage, or service.',
   })
   @IsEnum(ListingType)
   listingType: ListingType;
 
   @ApiProperty({
-    description: 'Additional attributes of the product',
-    example: { color: 'red', size: 'M' },
+    enum: BrokerageType,
+    example: BrokerageType.SALE,
+    description:
+      'Defines whether brokerage product is for SALE or RENT. Only required if listingType is BROKERAGE.',
     required: false,
   })
   @IsOptional()
-  @IsObject()
-  attributes: Record<string, any>;
+  @IsEnum(BrokerageType)
+  brokerageType?: BrokerageType;
 
   @ApiProperty({
-    description: 'The ID of the user who owns the product',
-    example: 'user-id',
+    example: '661c43efba6f3f13b93821b7',
+    description: 'Subcategory ID this product belongs to',
+  })
+  @IsString()
+  subcategoryId: string;
+
+  @ApiProperty({
+    example: '661c43efba6f3f13b93821b8',
+    description: 'ID of the user who created this product',
   })
   @IsString()
   userId: string;
 
   @ApiProperty({
-    description: 'Image URL of the product stored in Cloudinary',
-    example:
-      'https://res.cloudinary.com/demo/image/upload/v1234567890/products/productA.jpg',
+    example: { color: 'black', warranty: '1 year' },
+    description: 'Custom key-value attributes of the product',
     required: false,
   })
   @IsOptional()
-  @IsString()
-  imageUrl?: string;
+  @IsObject()
+  attributes?: Record<string, any>;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'Product image file (JPG/PNG)',
+    required: false,
+  })
+  @IsOptional()
+  imageUrl?: any;
 }

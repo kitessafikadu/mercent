@@ -7,28 +7,51 @@ import {
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ListingType } from '@prisma/client';
+import { ListingType, BrokerageType } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateProductDto) {
+  async create(data: CreateProductDto & { imageUrl?: string }) {
     console.log('Method called with data:', data);
+
+    // Validate and parse price
+    const parsedPrice = parseFloat(data.price as any);
+    if (isNaN(parsedPrice)) {
+      throw new BadRequestException('Price must be a valid number');
+    }
+
+    // Parse attributes JSON if needed
+    let parsedAttributes = {};
+    try {
+      parsedAttributes =
+        typeof data.attributes === 'string'
+          ? JSON.parse(data.attributes)
+          : data.attributes || {};
+    } catch {
+      throw new BadRequestException('Invalid JSON for attributes');
+    }
+
+    // Validate brokerageType if listingType is BROKERAGE
+    if (data.listingType === ListingType.BROKERAGE && !data.brokerageType) {
+      throw new BadRequestException(
+        'brokerageType is required when listingType is BROKERAGE',
+      );
+    }
 
     try {
       const product = await this.prisma.product.create({
         data: {
           name: data.name,
-          price: data.price,
+          price: parsedPrice,
           imageUrl: data.imageUrl,
-          listingType: data.listingType as ListingType, // Cast to ListingType
-          attributes: data.attributes || {},
+          description: data.description,
+          listingType: data.listingType as ListingType,
+          brokerageType: data.brokerageType as BrokerageType | undefined,
+          attributes: parsedAttributes,
 
-          // Updated Relation: Connect to the correct subcategory
           subcategory: { connect: { id: data.subcategoryId } },
-
-          // Connect to the user
           user: { connect: { id: data.userId } },
         },
       });
@@ -48,11 +71,11 @@ export class ProductsService {
       include: {
         subcategory: {
           include: {
-            parent: true, // Include parent subcategories if needed
-            children: true, // Include child subcategories if needed
+            parent: true,
+            children: true,
           },
         },
-        user: true, // Include user details
+        user: true,
       },
     });
   }
@@ -63,11 +86,11 @@ export class ProductsService {
       include: {
         subcategory: {
           include: {
-            parent: true, // Include parent subcategories if needed
-            children: true, // Include child subcategories if needed
+            parent: true,
+            children: true,
           },
         },
-        user: true, // Include user details
+        user: true,
       },
     });
 
@@ -78,7 +101,7 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, data: UpdateProductDto) {
+  async update(id: string, data: UpdateProductDto & { imageUrl?: string }) {
     if (
       data.listingType &&
       !Object.values(ListingType).includes(data.listingType as ListingType)
@@ -88,19 +111,44 @@ export class ProductsService {
       );
     }
 
+    if (data.listingType === ListingType.BROKERAGE && !data.brokerageType) {
+      throw new BadRequestException(
+        'brokerageType is required when listingType is BROKERAGE',
+      );
+    }
+
+    const parsedPrice =
+      typeof data.price === 'string' ? parseFloat(data.price) : data.price;
+    if (parsedPrice !== undefined && isNaN(parsedPrice)) {
+      throw new BadRequestException('Price must be a valid number');
+    }
+
+    let parsedAttributes = {};
+    try {
+      parsedAttributes =
+        typeof data.attributes === 'string'
+          ? JSON.parse(data.attributes)
+          : data.attributes || {};
+    } catch {
+      throw new BadRequestException('Invalid JSON for attributes');
+    }
+
     try {
       return this.prisma.product.update({
         where: { id },
         data: {
           name: data.name,
+          price: parsedPrice,
+          imageUrl: data.imageUrl,
+          description: data.description,
+          listingType: data.listingType as ListingType,
+          brokerageType: data.brokerageType as BrokerageType | undefined,
+          attributes: parsedAttributes,
+
           subcategory: data.subcategoryId
             ? { connect: { id: data.subcategoryId } }
             : undefined,
           user: data.userId ? { connect: { id: data.userId } } : undefined,
-          price: data.price,
-          listingType: data.listingType as ListingType,
-          attributes: data.attributes ? { ...data.attributes } : undefined,
-          imageUrl: data.imageUrl,
         },
       });
     } catch (error) {
