@@ -59,7 +59,7 @@ export class ProductsController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UpdateProductDto })
   @UseInterceptors(
-    FileInterceptor('image', { storage: multer.memoryStorage() }),
+    FileInterceptor('imageUrl', { storage: multer.memoryStorage() }),
   )
   async update(
     @Param('id') id: string,
@@ -70,10 +70,13 @@ export class ProductsController {
     if (file) {
       imageUrl = await this.cloudinaryService.uploadImage(file, 'products');
     }
-    return this.productsService.update(id, {
-      ...updateProductDto,
-      imageUrl,
-    });
+
+    const dataToUpdate = { ...updateProductDto };
+    if (imageUrl) {
+      dataToUpdate.imageUrl = imageUrl;
+    }
+
+    return this.productsService.update(id, dataToUpdate);
   }
 
   @Delete(':id')

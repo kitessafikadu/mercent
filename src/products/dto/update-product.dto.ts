@@ -81,11 +81,11 @@ export class UpdateProductDto {
   userId: string;
 
   @ApiProperty({
-    example: 'https://res.cloudinary.com/myapp/image/upload/v1/product.png',
-    description: 'New image URL if image is updated',
+    type: 'string',
+    format: 'binary',
+    description: 'Product image file (JPG/PNG)',
     required: false,
   })
   @IsOptional()
-  @IsString()
-  imageUrl?: string;
+  imageUrl?: any;
 }
