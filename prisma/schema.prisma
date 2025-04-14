@@ -21,6 +21,7 @@ model User {
   updatedAt   DateTime @updatedAt  
   products    Product[]
   orders      Order[] @relation("UserOrders")
+  carts       Cart[]  @relation("UserCarts")
 }
 
 enum UserType {
@@ -97,9 +98,28 @@ model Product {
   userId         String       @db.ObjectId
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders      Order[] @relation("ProductOrders")
+  cartItems   CartItem[] @relation("ProductCartItems")
 
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+}
+
+model Cart {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  user      User      @relation("UserCarts", fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  cartId    String   @db.ObjectId
+  productId String   @db.ObjectId
+  quantity  Int      @default(1)
+
+  product   Product  @relation("ProductCartItems", fields: [productId], references: [id])
 }
 
 model Order {
