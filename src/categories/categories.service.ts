@@ -1,19 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateCategoryDto) {
-    return this.prisma.category.create({
-      data: {
-        ...data,
-        attributes: data.attributes ?? {}, // Ensure attributes is always a valid JSON object
-      },
-    });
+    try {
+      return await this.prisma.category.create({
+        data: {
+          ...data,
+          attributes: data.attributes ?? {}, // Ensure attributes is always a valid JSON object
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        Array.isArray(error.meta?.target) &&
+        error.meta.target.includes('Category_name_key')
+      ) {
+        throw new BadRequestException(
+          `Category with name "${data.name}" already exists.`,
+        );
+      }
+      throw error;
+    }
   }
 
   async findAll() {
@@ -35,10 +50,15 @@ export class CategoriesService {
   }
 
   async update(id: string, data: UpdateCategoryDto) {
-    return this.prisma.category.update({ where: { id }, data });
+    return this.prisma.category.update({
+      where: { id },
+      data,
+    });
   }
 
   async remove(id: string) {
-    return this.prisma.category.delete({ where: { id } });
+    return this.prisma.category.delete({
+      where: { id },
+    });
   }
 }
