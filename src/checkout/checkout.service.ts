@@ -14,18 +14,19 @@ export class CheckoutService {
 
   async checkout(userId: string, dto: CheckoutDto) {
     const cart = await this.cartService.getCart(userId);
-    if (!cart || cart.length === 0) {
-      throw new NotFoundException('Your cart is empty');
+
+    if (!cart || cart.items.length === 0) {
+      throw new NotFoundException('Cart is empty');
     }
 
-    const totalAmount = cart.reduce(
+    const totalAmount = cart.items.reduce(
       (acc, item) => acc + item.product.price * item.quantity,
       0,
     );
 
     const order = await this.orderService.createOrderFromCart(
       userId,
-      cart,
+      cart.items,
       totalAmount,
       dto.notes,
     );

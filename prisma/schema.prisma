@@ -22,6 +22,7 @@ model User {
   products    Product[]
   orders      Order[] @relation("UserOrders")
   carts       Cart[]  @relation("UserCarts")
+  payments    Payment[] @relation("UserPayments")
 }
 
 enum UserType {
@@ -135,6 +136,7 @@ model Order {
 
   buyer          User           @relation("UserOrders", fields: [buyerId], references: [id])
   items          OrderItem[]    // ➕ A list of items in the order
+  payments       Payment[]      @relation(fields: [], references: []) // Opposite relation field for Payment
 }
 
 model OrderItem {
@@ -147,6 +149,19 @@ model OrderItem {
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product    Product  @relation(fields: [productId], references: [id])
 }
+
+model Payment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String
+  orderId   String
+  txRef     String   @unique
+  amount    Float
+  status    String   // PENDING, COMPLETED, FAILED, etc.
+  user  User  @relation("UserPayments", fields: [userId], references: [id])
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+
 
 enum OrderStatus {
   PENDING

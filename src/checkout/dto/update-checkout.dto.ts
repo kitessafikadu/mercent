@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateCheckoutDto } from './checkout.dto';
+import { CheckoutDto } from './checkout.dto';
 
-export class UpdateCheckoutDto extends PartialType(CreateCheckoutDto) {}
+export class UpdateCheckoutDto extends PartialType(CheckoutDto) {}
