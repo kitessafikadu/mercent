@@ -9,5 +9,6 @@ import { PaymentModule } from '../payments/payments.module';
   imports: [CartModule, OrdersModule, PaymentModule],
   controllers: [CheckoutController],
   providers: [CheckoutService],
+  exports: [CheckoutService],
 })
 export class CheckoutModule {}
