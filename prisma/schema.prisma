@@ -19,6 +19,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+
+
+
 model User {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   fullName    String
@@ -31,8 +35,11 @@ model User {
   userStatus  UserStatus
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt  
+  product Product[]
+  order Order[] 
   // services    Service[]
 }
+
 
 
 enum UserType {
@@ -49,36 +56,44 @@ enum UserStatus {
 }
 
 
-enum ListingType{
-  SELL
-  RENT
-  SERVICE
+enum ListingType {
+  ECOMMERCE   // Products sold directly online
+  BROKERAGE   // Products listed for sale or rental, negotiated via chat
+  SERVICE     // Services offered by merchants
 }
+
+enum BrokerageType {
+  SALE
+  RENT
+}
+
+
 
 model Category {
   id            String         @id @default(auto()) @map("_id") @db.ObjectId
   name          String         @unique
-  subcategories SubCategory[]
+  subcategories SubCategory[] @relation("RootCategorySubcategories")
   attributes    Json?
-  imageUrl      String?        // Add this
-  description   String?        // Add this
+  imageUrl      String?
+  description   String?
 }
-
-
-
 
 
 model SubCategory {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
   name        String
-  categoryId  String   @db.ObjectId
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  description String?
+  attributes  Json?
+  categoryId  String
+  category    Category       @relation("RootCategorySubcategories", fields: [categoryId], references: [id], onDelete: Cascade)
+  parentId    String?        
+  parent      SubCategory?   @relation("SubcategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    SubCategory[]  @relation("SubcategoryHierarchy")  // ✅ Removed `onDelete` & `onUpdate` here
+  // products    Product[]
   subSubcategories SubSubCategory[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
-
-
-
-
 
 model SubSubCategory {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -93,13 +108,80 @@ model SubSubCategory {
 
 
 model Product {
-  id             String  @id @default(auto()) @map("_id")   @db.ObjectId
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
   name           String
-  subSubcategoryId String @db.ObjectId
-  subSubcategory  SubSubCategory @relation(fields: [subSubcategoryId], references: [id], onDelete: Cascade)
   price          Float
+  description    String?
+  imageUrl       String?
   listingType    ListingType
-  attributes     Json  // Inherits from Category + SubSubCategory
-  imageUrl      String?        // Add this
-  description   String?        // Add this
+  brokerageType  BrokerageType?
+  attributes     Json
+
+  // subcategoryId  String       @db.ObjectId
+  subSubcategoryId String
+  // subcategory    SubCategory  @relation(fields: [subcategoryId], references: [id], onDelete: NoAction) // ✅ Fixed cyclic dependency
+  subSubcategory  SubSubCategory @relation(fields: [subSubcategoryId], references: [id], onDelete: Cascade)
+
+  userId         String       @db.ObjectId
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  cartItem       CartItem[]
+    orderItem OrderItem[]
+
+}
+model CartItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId   String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
+
+
+
+
+
+model Order {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId      String      @db.ObjectId
+  items        OrderItem[]
+  totalAmount  Float
+  status       OrderStatus @default(PENDING)
+  paymentId    String?    @unique   // Chapa transaction ID (e.g., "chp_tx_123")
+  paymentUrl   String?     // Chapa checkout URL (e.g., "https://checkout.chapa.co/xyz")
+   currency        String        @default("ETB")
+  createdAt    DateTime    @default(now())
+  
+  buyer        User        @relation(fields: [buyerId], references: [id])
+}
+
+model OrderItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String   @db.ObjectId
+  productId   String   @db.ObjectId
+  quantity    Int
+  priceAtOrder Float   // Snapshot of price at checkout
+  
+  order       Order    @relation(fields: [orderId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
 }

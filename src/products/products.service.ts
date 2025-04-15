@@ -8,49 +8,32 @@ import { PrismaService } from 'src/auth/prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ListingType } from '@prisma/client';
+import { ObjectId } from 'bson';
 
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateProductDto & { imageUrl?: string }) {
-    // Force conversion to number in case it comes as string
+  async create(data: CreateProductDto & { imageUrl?: string }, userId: string) {
     data.price = Number(data.price);
 
-    if (
-      !data.name ||
-      !data.price ||
-      !data.listingType ||
-      !data.subSubcategoryId
-    ) {
-      throw new BadRequestException('Missing required fields');
+    console.log(data);
+    // Check if the subSubcategoryId is present
+    if (!data.subSubcategoryId) {
+      throw new BadRequestException('Missing subSubcategoryId');
     }
 
-    if (!Object.values(ListingType).includes(data.listingType as ListingType)) {
-      throw new BadRequestException(
-        `Invalid listing type: ${data.listingType}`,
-      );
-    }
-
-    if (isNaN(data.price) || data.price <= 0) {
-      throw new BadRequestException('Price must be a positive number');
-    }
-
-    let subSubcategory;
-    try {
-      subSubcategory = await this.prisma.subSubCategory.findUnique({
-        where: { id: data.subSubcategoryId },
-        select: { id: true },
-      });
-
-      if (!subSubcategory) {
-        throw new NotFoundException(
-          `SubSubcategory with ID ${data.subSubcategoryId} not found`,
-        );
-      }
-    } catch (error) {
-      if (error instanceof NotFoundException) throw error;
+    // Validate ObjectId format
+    if (!ObjectId.isValid(data.subSubcategoryId)) {
       throw new BadRequestException('Invalid subSubcategoryId format');
+    }
+
+    const subSubcategory = await this.prisma.subSubCategory.findUnique({
+      where: { id: data.subSubcategoryId },
+    });
+
+    if (!subSubcategory) {
+      throw new BadRequestException('SubSubcategory not found');
     }
 
     const attributes =
@@ -65,9 +48,14 @@ export class ProductsService {
           price: data.price,
           listingType: data.listingType as ListingType,
           attributes,
-          subSubcategoryId: data.subSubcategoryId,
+          subSubcategory: {
+            connect: { id: data.subSubcategoryId },
+          },
           description: data.description || '',
           imageUrl: data.imageUrl || null,
+          user: {
+            connect: { id: userId },
+          },
         },
       });
 

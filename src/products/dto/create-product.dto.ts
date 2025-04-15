@@ -8,13 +8,13 @@ import {
   IsObject,
   IsOptional,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
   subSubcategoryId: string;
@@ -23,7 +23,8 @@ export class CreateProductDto {
   @Min(0)
   price: number;
 
-  @IsEnum(ListingType)
+  @Transform(({ value }) => value.toUpperCase())
+  @IsEnum(ListingType, { message: 'Invalid listing type' })
   listingType: ListingType;
 
   @IsObject()
