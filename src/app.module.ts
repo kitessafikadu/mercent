@@ -5,8 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
-import { SubCategoriesModule } from './categories/subcategories/subcategories.module';
-import { SubSubCategoriesModule } from './categories/subcategories/subsubcategories/subsubcategories.module';
+import { SubCategoriesModule } from './subcategories/subcategories.module';
 import { OrdersModule } from './orders/orders.module';
 import { CartModule } from './cart/cart.module';
 import { PaymentsModule } from './payments/payments.module';
@@ -20,7 +19,6 @@ import { PaymentsModule } from './payments/payments.module';
     ProductsModule,
     CategoriesModule,
     SubCategoriesModule,
-    SubSubCategoriesModule,
     OrdersModule,
     CartModule,
     PaymentsModule,

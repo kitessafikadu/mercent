@@ -1,12 +1,12 @@
-import { IsString, IsOptional, IsObject } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
+  @ApiProperty()
   @IsString()
   name: string;
-  description?: string;
-  imageUrl?: string;
 
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsObject()
-  attributes?: Record<string, any>; // Add this line to fix the issue
+  attributes?: any;
 }
