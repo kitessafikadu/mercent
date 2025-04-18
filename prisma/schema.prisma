@@ -95,6 +95,8 @@ model SubCategory {
   updatedAt   DateTime       @updatedAt
 }
 
+
+
 model SubSubCategory {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   name         String
