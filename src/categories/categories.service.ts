@@ -13,7 +13,7 @@ export class CategoriesService {
       return await this.prisma.category.create({
         data: {
           ...data,
-          attributes: data.attributes ?? {}, // Ensure attributes is always a valid JSON object
+          attributes: data.attributes ?? {},
         },
       });
     } catch (error) {
@@ -38,7 +38,7 @@ export class CategoriesService {
 
     return categories.map((category) => ({
       ...category,
-      attributes: category.attributes ?? {}, // Replace null with an empty object
+      attributes: category.attributes ?? {},
     }));
   }
 

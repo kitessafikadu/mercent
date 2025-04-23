@@ -20,16 +20,15 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { AuthenticatedRequest } from 'src/auth/interfaces/authenticated-request.interface';
 import { CartItemWithProductDto } from './dto/add-to-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
-// import { AuthenticatedRequest } from 'src/auth/interfaces/authenticated-request.interface';
 
 @ApiTags('Cart')
 @Controller('cart')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard) // Requires authentication
-  @ApiBearerAuth() // For Swagger documentation
   @ApiBody({
     description: 'Add item to cart',
     schema: {
@@ -42,21 +41,19 @@ export class CartController {
   })
   addToCart(
     @Body() addToCartDto: AddToCartDto,
-    @Req() req: AuthenticatedRequest, // Gets user from JWT
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.cartService.addToCart({
       ...addToCartDto,
-      buyerId: req.user.userId, // Automatically use logged-in user's ID
+      buyerId: req.user.userId,
     });
   }
   @Get()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user cart with product details' })
   @ApiResponse({
     status: 200,
     description: 'Returns cart items with product info',
-    type: [CartItemWithProductDto], // Now properly recognized
+    type: [CartItemWithProductDto],
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCart(@Req() req: AuthenticatedRequest) {
@@ -64,8 +61,6 @@ export class CartController {
   }
 
   @Delete(':productId')
-  @UseGuards(JwtAuthGuard) // 🔐 Requires login
-  @ApiBearerAuth()
   @ApiOperation({ summary: "Remove item from authenticated user's cart" })
   @ApiParam({ name: 'productId', type: String, example: 'prod123' })
   @ApiResponse({
@@ -80,20 +75,16 @@ export class CartController {
     },
   })
   @ApiResponse({ status: 404, description: 'Item not found in cart' })
-  async removeFromCart(
-    @Param('productId') productId: string,
-    @Req() req: any, // Authenticated request (user injected via JWT)
-  ) {
+  async removeFromCart(@Param('productId') productId: string, @Req() req: any) {
     return this.cartService.removeFromCart(req.user.userId, productId);
   }
 
-  @Delete('clear/:buyerId')
-  clearCart(@Param('buyerId') buyerId: string) {
-    return this.cartService.clearCart(buyerId);
+  @Delete('clear')
+  clearCart(@Req() req: AuthenticatedRequest) {
+    return this.cartService.clearCart(req.user.userId);
   }
+
   @Patch()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update item quantity in cart' })
   async updateCartItem(
     @Body() updateDto: UpdateCartDto,
@@ -101,7 +92,7 @@ export class CartController {
   ) {
     return this.cartService.updateCartItem({
       ...updateDto,
-      buyerId: req.user.userId, // From JWT
+      buyerId: req.user.userId,
     });
   }
 

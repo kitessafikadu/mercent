@@ -12,7 +12,6 @@ export class OrdersService {
 
   async createOrderFromCart(buyerId: string) {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Get user and cart items
       const [user, cartItems] = await Promise.all([
         tx.user.findUnique({
           where: { id: buyerId },
@@ -31,9 +30,8 @@ export class OrdersService {
         throw new Error('User email not found.');
       }
 
-      console.log('User email:', user.email); // Log user email for debugging
+      console.log('User email:', user.email);
 
-      // 2. Create order
       const order = await tx.order.create({
         data: {
           buyerId,
@@ -52,9 +50,18 @@ export class OrdersService {
         },
       });
 
-      console.log('Order created:', order); // Log order details for debugging
+      for (const item of cartItems) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            quantity: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
 
-      // 3. Process payment
+      console.log('Order created:', order);
       try {
         const payment = await this.chapaService.initiatePayment({
           amount: order.totalAmount,
@@ -62,7 +69,7 @@ export class OrdersService {
           orderId: order.id,
         });
 
-        console.log('Payment response:', payment); // Log the payment response
+        console.log('Payment response:', payment);
 
         if (!payment?.checkout_url) {
           throw new Error(
@@ -70,10 +77,8 @@ export class OrdersService {
           );
         }
 
-        // If tx_ref is not available, generate a unique identifier for the payment
         const tx_ref = payment.tx_ref || `order_${order.id}_${Date.now()}`;
 
-        // Update order with payment details
         await tx.order.update({
           where: { id: order.id },
           data: {
@@ -83,11 +88,10 @@ export class OrdersService {
             status:
               payment.status === 'success'
                 ? OrderStatus.PAID
-                : OrderStatus.PENDING, // Update order status here
+                : OrderStatus.PENDING,
           },
         });
 
-        // Clear the cart items
         await tx.cartItem.deleteMany({ where: { buyerId } });
 
         return {
@@ -95,7 +99,7 @@ export class OrdersService {
           paymentUrl: payment.checkout_url,
         };
       } catch (error) {
-        console.error('Error during payment initialization:', error); // Log detailed error
+        console.error('Error during payment initialization:', error);
         throw new Error('Payment initialization failed');
       }
     });

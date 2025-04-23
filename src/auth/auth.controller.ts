@@ -1,10 +1,13 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { SigninDto } from './dto/signin.dto';
+import { VerifyOtpDto } from './dto/verify-otp-dto';
+import { UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
-@ApiTags('Auth') // Group authentication endpoints
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -15,6 +18,12 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   async signup(@Body() dto: SignupDto) {
     return this.authService.signup(dto);
+  }
+
+  @Post('verify-otp')
+  @HttpCode(200)
+  async verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyOtp(dto.otpToken, dto.otp);
   }
 
   @Post('signin')

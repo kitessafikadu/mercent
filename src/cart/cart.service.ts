@@ -12,38 +12,44 @@ export class CartService {
   async addToCart(dto: AddToCartDto & { buyerId: string }) {
     const { buyerId, productId, quantity } = dto;
 
-    // Verify product exists
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
-      select: { id: true, price: true }, // Only get needed fields
+      select: { id: true, price: true, quantity: true },
     });
 
     if (!product) {
       throw new NotFoundException('Product not found');
     }
 
-    // Check for existing cart item
     const existingItem = await this.prisma.cartItem.findFirst({
       where: { buyerId, productId },
     });
 
+    const totalDesiredQuantity = existingItem
+      ? existingItem.quantity + quantity
+      : quantity;
+
+    if (totalDesiredQuantity > product.quantity) {
+      throw new BadRequestException(
+        `Only ${product.quantity} item(s) available in stock.`,
+      );
+    }
+
     if (existingItem) {
-      // Update quantity if already in cart
       return this.prisma.cartItem.update({
         where: { id: existingItem.id },
-        data: { quantity: existingItem.quantity + quantity },
-        include: { product: true }, // Return full product details
+        data: { quantity: totalDesiredQuantity },
+        include: { product: true },
       });
     }
 
-    // Create new cart item
     return this.prisma.cartItem.create({
       data: {
         buyerId,
         productId,
         quantity,
       },
-      include: { product: true }, // Return full product details
+      include: { product: true },
     });
   }
 
@@ -59,7 +65,7 @@ export class CartService {
   async removeFromCart(buyerId: string, productId: string) {
     const cartItem = await this.prisma.cartItem.findFirst({
       where: {
-        buyerId, // Ensures users can only delete their own items
+        buyerId,
         productId,
       },
     });
@@ -68,10 +74,9 @@ export class CartService {
       throw new NotFoundException('Item not found in your cart');
     }
 
-    // 2. Delete the item
     return this.prisma.cartItem.delete({
       where: { id: cartItem.id },
-      include: { product: true }, // Return deleted item + product details
+      include: { product: true },
     });
   }
 
@@ -94,7 +99,6 @@ export class CartService {
         throw new BadRequestException('Cart is empty');
       }
 
-      // 1. Create the order with items
       const order = await tx.order.create({
         data: {
           buyerId,
@@ -113,7 +117,6 @@ export class CartService {
         },
       });
 
-      // 2. Clear cart
       await tx.cartItem.deleteMany({ where: { buyerId } });
 
       return {
@@ -123,7 +126,6 @@ export class CartService {
     });
   }
   async updateCartItem(dto: UpdateCartDto & { buyerId: string }) {
-    // 1. Check if item exists in user's cart
     const cartItem = await this.prisma.cartItem.findFirst({
       where: {
         buyerId: dto.buyerId,
@@ -135,11 +137,25 @@ export class CartService {
       throw new NotFoundException('Item not found in your cart');
     }
 
-    // 2. Update quantity
+    const product = await this.prisma.product.findUnique({
+      where: { id: dto.productId },
+      select: { quantity: true },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    if (dto.quantity > product.quantity) {
+      throw new BadRequestException(
+        `Only ${product.quantity} item(s) available in stock.`,
+      );
+    }
+
     return this.prisma.cartItem.update({
       where: { id: cartItem.id },
       data: { quantity: dto.quantity },
-      include: { product: true }, // Return product details
+      include: { product: true },
     });
   }
 }

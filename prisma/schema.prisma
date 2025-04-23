@@ -20,7 +20,11 @@ datasource db {
 }
 
 
-
+enum UserType {
+  MERCHANT
+  USER
+  ADMIN
+}
 
 
 model User {
@@ -31,22 +35,22 @@ model User {
   phoneNumber String?
   address     String?
   profilePic  String?
+    otp         String?     
+  otpExpires  DateTime?   
   userType    UserType
   userStatus  UserStatus
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt  
+
   product Product[]
-  order Order[] 
+  order Order[]
+  cartItem CartItem[] 
   // services    Service[]
 }
 
 
 
-enum UserType {
-  MERCHANT
-  USER
-  ADMIN
-}
+
 
 
 enum UserStatus {
@@ -88,23 +92,22 @@ model SubCategory {
   category    Category       @relation("RootCategorySubcategories", fields: [categoryId], references: [id], onDelete: Cascade)
   parentId    String?        
   parent      SubCategory?   @relation("SubcategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  children    SubCategory[]  @relation("SubcategoryHierarchy")  // ✅ Removed `onDelete` & `onUpdate` here
-  // products    Product[]
-  subSubcategories SubSubCategory[]
+  children    SubCategory[]  @relation("SubcategoryHierarchy")  
+  products    Product[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 }
 
 
 
-model SubSubCategory {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  subCategoryId String? @db.ObjectId
-  subCategory  SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
-  attributes   Json?
-  products     Product[]
-}
+// model SubSubCategory {
+//   id           String   @id @default(auto()) @map("_id") @db.ObjectId
+//   name         String
+//   subCategoryId String? @db.ObjectId
+//   subCategory  SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+//   attributes   Json?
+//   products     Product[]
+// }
 
 
 
@@ -115,23 +118,21 @@ model Product {
   price          Float
   description    String?
   imageUrl       String?
+  quantity       Int @default(1)
   listingType    ListingType
   brokerageType  BrokerageType?
   attributes     Json
 
-  // subcategoryId  String       @db.ObjectId
-  subSubcategoryId String
-  // subcategory    SubCategory  @relation(fields: [subcategoryId], references: [id], onDelete: NoAction) // ✅ Fixed cyclic dependency
-  subSubcategory  SubSubCategory @relation(fields: [subSubcategoryId], references: [id], onDelete: Cascade)
-
+  subcategoryId  String       @db.ObjectId
+  // subSubcategoryId String
+  subcategory    SubCategory  @relation(fields: [subcategoryId], references: [id], onDelete: NoAction) // ✅ Fixed cyclic dependency
+  // subSubcategory  SubSubCategory @relation(fields: [subSubcategoryId], references: [id], onDelete: Cascade)
   userId         String       @db.ObjectId
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   cartItem       CartItem[]
     orderItem OrderItem[]
-
 }
 model CartItem {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -140,8 +141,10 @@ model CartItem {
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   product   Product  @relation(fields: [productId], references: [id])
+  buyer     User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@unique([buyerId, productId]) // Enforcing unique cart item per user and product
 }
 
 
@@ -155,8 +158,8 @@ model Order {
   items        OrderItem[]
   totalAmount  Float
   status       OrderStatus @default(PENDING)
-  paymentId    String?    @unique   // Chapa transaction ID (e.g., "chp_tx_123")
-  paymentUrl   String?     // Chapa checkout URL (e.g., "https://checkout.chapa.co/xyz")
+  paymentId    String?    @unique   
+  paymentUrl   String?    
    currency        String        @default("ETB")
   createdAt    DateTime    @default(now())
   
@@ -168,7 +171,7 @@ model OrderItem {
   orderId     String   @db.ObjectId
   productId   String   @db.ObjectId
   quantity    Int
-  priceAtOrder Float   // Snapshot of price at checkout
+  priceAtOrder Float  
   
   order       Order    @relation(fields: [orderId], references: [id])
   product     Product  @relation(fields: [productId], references: [id])

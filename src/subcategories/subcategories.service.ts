@@ -10,13 +10,17 @@ export class SubcategoriesService {
   create(dto: CreateSubcategoryDto) {
     return this.prisma.subCategory.create({
       data: dto,
+      include: {
+        category: true,
+        parent: true,
+      },
     });
   }
 
   findAll() {
     return this.prisma.subCategory.findMany({
       include: {
-        children: true, // Include child subcategories for recursion
+        children: true,
       },
     });
   }
@@ -25,7 +29,7 @@ export class SubcategoriesService {
     return this.prisma.subCategory.findUnique({
       where: { id },
       include: {
-        children: true, // Include child subcategories for recursion
+        children: true,
       },
     });
   }

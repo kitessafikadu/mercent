@@ -22,6 +22,8 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CloudinaryService } from 'src/config/cloudinary.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
 @Controller('products')
 export class ProductsController {
@@ -31,9 +33,10 @@ export class ProductsController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
-  @UseInterceptors(FileInterceptor('image')) // Add this line
+  @Roles('MERCHANT', 'ADMIN')
+  @UseInterceptors(FileInterceptor('image'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Create Product with Image',
@@ -42,12 +45,13 @@ export class ProductsController {
       properties: {
         name: { type: 'string', example: 'iPhone 15' },
         price: { type: 'number', example: 1200 },
+        quantity: { type: 'number' },
         listingType: {
           type: 'string',
           enum: ['ECOMMERCE', 'BROKERAGE', 'SERVICE'],
           example: 'ECOMMERCE',
         },
-        subSubcategoryId: { type: 'string' },
+        subCategoryId: { type: 'string' },
         description: { type: 'string', example: 'A premium Apple smartphone' },
         attributes: {
           type: 'object',
@@ -59,7 +63,7 @@ export class ProductsController {
   })
   async create(
     @UploadedFile() file: Express.Multer.File,
-    @Body() createProductDto: CreateProductDto, // This captures all form fields
+    @Body() createProductDto: CreateProductDto,
     @Req() req: AuthenticatedRequest,
   ) {
     const imageUrl = file
@@ -72,16 +76,23 @@ export class ProductsController {
     );
   }
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   findAll() {
     return this.productsService.findAll();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'MERCHANT')
+  @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('image'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -91,8 +102,12 @@ export class ProductsController {
       properties: {
         name: { type: 'string' },
         price: { type: 'number' },
-        listingType: { type: 'string', enum: ['SELL', 'RENT', 'SERVICE'] },
-        subSubcategoryId: { type: 'string' },
+        quantity: { type: 'string' },
+        listingType: {
+          type: 'string',
+          enum: ['ECOMMERCE', 'BROKERAGE', 'SERVICE'],
+        },
+        subCategoryId: { type: 'string' },
         description: { type: 'string' },
         attributes: { type: 'object' },
         image: { type: 'string', format: 'binary' },
@@ -115,6 +130,8 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }

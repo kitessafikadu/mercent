@@ -4,6 +4,9 @@ import { SignupDto } from './dto/signup.dto';
 import { SigninDto } from './dto/signin.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { UserType } from '@prisma/client';
+import { sendOtpEmail } from './utils/mailer';
+import { generateOtp, getOtpExpiry } from './utils/otp-generator';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +25,8 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const otp = generateOtp();
+    const otpExpires = getOtpExpiry();
 
     const user = await this.prisma.user.create({
       data: {
@@ -30,16 +35,80 @@ export class AuthService {
         password: hashedPassword,
         phoneNumber: dto.phoneNumber,
         address: dto.address,
-        userType: 'USER',
+        userType: dto.userType,
         userStatus: 'INACTIVE',
+        otp,
+        otpExpires,
       },
     });
 
-    return { message: 'User registered successfully', user };
+    await sendOtpEmail(user.email, otp);
+
+    // Generate a short-lived OTP token (JWT)
+    const otpToken = this.jwtService.sign(
+      { email: user.email },
+      { expiresIn: '10m' },
+    );
+
+    // ✅ Return user data (without sensitive fields)
+    const { password, otp: _, otpExpires: __, ...safeUser } = user;
+
+    return {
+      message: 'OTP sent to your email. Please verify to complete signup.',
+      otpToken,
+      user: safeUser, // 👈 safe user data
+    };
+  }
+
+  async verifyOtp(otpToken: string, otp: string) {
+    let email: string;
+
+    try {
+      const decoded = this.jwtService.verify(otpToken);
+      email = decoded.email;
+    } catch (err) {
+      throw new HttpException(
+        'Invalid or expired OTP token',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (
+      !user ||
+      user.otp !== otp ||
+      !user.otpExpires ||
+      new Date() > user.otpExpires
+    ) {
+      throw new HttpException('Invalid or expired OTP', HttpStatus.BAD_REQUEST);
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { email },
+      data: {
+        userStatus: 'ACTIVE',
+        otp: null,
+        otpExpires: null,
+      },
+    });
+
+    const authToken = this.jwtService.sign({
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      userType: updatedUser.userType,
+    });
+
+    return {
+      message: 'User verified successfully',
+      token: authToken,
+      user: updatedUser,
+    };
   }
 
   async signin(dto: SigninDto) {
-    // Find user by email
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -48,10 +117,17 @@ export class AuthService {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
 
-    // Generate JWT token
+    if (user.userStatus !== 'ACTIVE') {
+      throw new HttpException(
+        'Account is not active. Please verify your email or contact support.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
     const token = this.jwtService.sign({
       userId: user.id,
       email: user.email,
+      userType: user.userType,
     });
 
     return { message: 'Login successful', token };

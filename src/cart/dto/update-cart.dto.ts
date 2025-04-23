@@ -8,6 +8,6 @@ export class UpdateCartDto {
 
   @ApiProperty({ example: 2, minimum: 1 })
   @IsNumber()
-  @Min(1) // Minimum quantity = 1
+  @Min(1)
   quantity: number;
 }
