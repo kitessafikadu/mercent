@@ -33,11 +33,6 @@ export class CartItemWithProductDto {
 }
 
 export class AddToCartDto {
-  // @ApiProperty({ example: 'user123' })
-  // @IsString()
-  // @IsNotEmpty()
-  // buyerId: string;
-
   @ApiProperty({ example: 'prod456' })
   @IsString()
   @IsNotEmpty()

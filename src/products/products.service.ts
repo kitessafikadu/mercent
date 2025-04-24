@@ -16,30 +16,36 @@ export class ProductsService {
 
   async create(data: CreateProductDto & { imageUrl?: string }, userId: string) {
     data.price = Number(data.price);
+    data.quantity = Number(data.quantity);
+    console.log('Incoming data:', data);
 
-    console.log(data);
-    // Check if the subSubcategoryId is present
-    if (!data.subSubcategoryId) {
-      throw new BadRequestException('Missing subSubcategoryId');
+    if (!data.subCategoryId) {
+      throw new BadRequestException('Missing subCategoryId');
     }
 
-    // Validate ObjectId format
-    if (!ObjectId.isValid(data.subSubcategoryId)) {
-      throw new BadRequestException('Invalid subSubcategoryId format');
+    if (!ObjectId.isValid(data.subCategoryId)) {
+      throw new BadRequestException('Invalid subCategoryId format');
     }
 
-    const subSubcategory = await this.prisma.subSubCategory.findUnique({
-      where: { id: data.subSubcategoryId },
+    const subSubcategory = await this.prisma.subCategory.findUnique({
+      where: { id: data.subCategoryId },
     });
 
     if (!subSubcategory) {
-      throw new BadRequestException('SubSubcategory not found');
+      throw new BadRequestException('Subcategory not found');
     }
 
-    const attributes =
-      data.attributes && typeof data.attributes === 'object'
-        ? data.attributes
-        : {};
+    let attributes = {};
+    try {
+      attributes =
+        data.attributes && typeof data.attributes === 'string'
+          ? JSON.parse(data.attributes)
+          : (data.attributes ?? {});
+    } catch (err) {
+      throw new BadRequestException('Invalid attributes format (must be JSON)');
+    }
+
+    console.log('Parsed attributes:', attributes);
 
     try {
       const product = await this.prisma.product.create({
@@ -47,9 +53,10 @@ export class ProductsService {
           name: data.name,
           price: data.price,
           listingType: data.listingType as ListingType,
+          quantity: data.quantity,
           attributes,
-          subSubcategory: {
-            connect: { id: data.subSubcategoryId },
+          subcategory: {
+            connect: { id: data.subCategoryId },
           },
           description: data.description || '',
           imageUrl: data.imageUrl || null,
@@ -59,17 +66,33 @@ export class ProductsService {
         },
       });
 
+      console.log('Saved product:', product);
+
       return await this.prisma.product.findUnique({
         where: { id: product.id },
-        include: {
-          subSubcategory: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          quantity: true,
+          description: true,
+          imageUrl: true,
+          listingType: true,
+          brokerageType: true,
+          attributes: true,
+          subcategoryId: true,
+          userId: true,
+          createdAt: true,
+          updatedAt: true,
+          subcategory: {
             select: {
               id: true,
               name: true,
-              subCategory: {
+              category: {
                 select: {
                   id: true,
                   name: true,
+                  attributes: true,
                 },
               },
             },
@@ -83,23 +106,77 @@ export class ProductsService {
   }
 
   async findAll() {
-    return this.prisma.product.findMany();
+    return await this.prisma.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        description: true,
+        imageUrl: true,
+        listingType: true,
+        brokerageType: true,
+        attributes: true,
+        subcategoryId: true,
+        userId: true,
+        createdAt: true,
+        updatedAt: true,
+        subcategory: {
+          select: {
+            id: true,
+            name: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
+                attributes: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        description: true,
+        imageUrl: true,
+        listingType: true,
+        brokerageType: true,
+        attributes: true,
+        subcategoryId: true,
+        userId: true,
+        createdAt: true,
+        updatedAt: true,
+        subcategory: {
+          select: {
+            id: true,
+            name: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
+                attributes: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException('Product not found');
     }
 
     return product;
   }
 
   async update(id: string, data: UpdateProductDto & { imageUrl?: string }) {
-    // Validate listing type if provided
     if (
       data.listingType &&
       !Object.values(ListingType).includes(data.listingType as ListingType)
@@ -109,11 +186,9 @@ export class ProductsService {
       );
     }
 
-    // Validate attributes if provided
     let attributes = {};
     if (data.attributes) {
       try {
-        // Ensure attributes is a valid object
         attributes =
           typeof data.attributes === 'object'
             ? data.attributes
@@ -122,8 +197,6 @@ export class ProductsService {
         throw new BadRequestException('Invalid attributes format');
       }
     }
-
-    // Ensure price is a valid float number (if provided)
     let price: number | undefined;
     if (data.price) {
       price =
@@ -135,22 +208,51 @@ export class ProductsService {
       }
     }
 
-    // Prepare the data object for updating the product
     const updateData: any = {
       name: data.name,
-      subSubcategoryId: data.subSubcategoryId,
-      price: price,
+      subCategoryId: data.subCategoryId,
+      price,
       listingType: data.listingType as ListingType,
-      attributes: Object.keys(attributes).length ? attributes : undefined, // Only set if attributes are provided
-      description: data.description || undefined, // Keep existing description if not provided
-      imageUrl: data.imageUrl || undefined, // Keep existing image URL if not provided
+      attributes: Object.keys(attributes).length ? attributes : undefined,
+      description: data.description || undefined,
+      imageUrl: data.imageUrl || undefined,
     };
 
     try {
-      // Perform the update operation
-      return this.prisma.product.update({
+      const updated = await this.prisma.product.update({
         where: { id },
         data: updateData,
+      });
+
+      return await this.prisma.product.findUnique({
+        where: { id: updated.id },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          description: true,
+          imageUrl: true,
+          listingType: true,
+          brokerageType: true,
+          attributes: true,
+          subcategoryId: true,
+          userId: true,
+          createdAt: true,
+          updatedAt: true,
+          subcategory: {
+            select: {
+              id: true,
+              name: true,
+              category: {
+                select: {
+                  id: true,
+                  name: true,
+                  attributes: true,
+                },
+              },
+            },
+          },
+        },
       });
     } catch (error) {
       throw new InternalServerErrorException(

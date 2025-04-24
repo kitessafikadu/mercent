@@ -17,11 +17,15 @@ export class CreateProductDto {
 
   @IsString()
   @IsNotEmpty()
-  subSubcategoryId: string;
+  subCategoryId: string;
 
   @IsNumber()
   @Min(0)
   price: number;
+
+  @IsNumber()
+  @Min(0)
+  quantity: number;
 
   @Transform(({ value }) => value.toUpperCase())
   @IsEnum(ListingType, { message: 'Invalid listing type' })

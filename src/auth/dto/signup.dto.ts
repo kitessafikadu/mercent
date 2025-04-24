@@ -13,7 +13,7 @@ export class SignupDto {
   @IsString()
   fullName: string;
 
-  @ApiProperty({ example: 'johndoe@example.com' })
+  @ApiProperty({ example: 'senkeb22@gmail.com' })
   @IsEmail()
   email: string;
 

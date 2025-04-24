@@ -13,7 +13,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-import { UsersService } from './users.service'; // Fix here
+import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Request } from 'express';
@@ -23,13 +23,12 @@ import { Request } from 'express';
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private usersService: UsersService) {} // Fix here
+  constructor(private usersService: UsersService) {}
 
   @Get('profile')
   @ApiOperation({ summary: 'Get logged-in user profile' })
   @ApiResponse({ status: 200, description: 'User profile retrieved' })
   getProfile(@Req() req: Request & { user: any }) {
-    // Fix here
     return this.usersService.getProfile(req.user.userId);
   }
 
@@ -47,7 +46,6 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete user account' })
   @ApiResponse({ status: 200, description: 'User account deleted' })
   deleteAccount(@Req() req: Request & { user: any }) {
-    // Fix here
     return this.usersService.deleteAccount(req.user.userId);
   }
 }

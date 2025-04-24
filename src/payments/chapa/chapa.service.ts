@@ -24,7 +24,6 @@ export class ChapaService {
     email: string;
     orderId: string;
   }): Promise<ChapaPaymentResponse> {
-    // Validate email format before sending to Chapa API
     if (!data.email || !/\S+@\S+\.\S+/.test(data.email)) {
       throw new Error('Invalid email format');
     }
@@ -37,7 +36,7 @@ export class ChapaService {
           currency: 'ETB',
           email: data.email,
           tx_ref: `order_${data.orderId}_${Date.now()}`,
-          order_id: data.orderId, // ✅ Add this
+          order_id: data.orderId,
           callback_url: `${process.env.APP_URL}/payments/verify`,
         },
         {

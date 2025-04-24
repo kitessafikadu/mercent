@@ -2,44 +2,47 @@ import {
   Controller,
   Get,
   Post,
-  Body,
-  Param,
   Patch,
   Delete,
+  Param,
+  Body,
   UseGuards,
 } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { SubcategoriesService } from './subcategories.service';
+import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
+import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
-@Controller('categories')
+@Controller('subcategories')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
-export class CategoriesController {
-  constructor(private readonly service: CategoriesService) {}
+export class SubcategoriesController {
+  constructor(private readonly service: SubcategoriesService) {}
+
   @Post()
   @Roles('ADMIN')
-  create(@Body() dto: CreateCategoryDto) {
+  create(@Body() dto: CreateSubcategoryDto) {
     return this.service.create(dto);
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll() {
     return this.service.findAll();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
   @Roles('ADMIN')
-  update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateSubcategoryDto) {
     return this.service.update(id, dto);
   }
 
