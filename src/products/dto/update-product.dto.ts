@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 export class UpdateProductDto {
   name?: string;
   subcategoryId?: string;
@@ -6,3 +7,9 @@ export class UpdateProductDto {
   attributes?: Record<string, any>;
   userId: string;
 }
+=======
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateProductDto } from './create-product.dto';
+
+export class UpdateProductDto extends PartialType(CreateProductDto) {}
+>>>>>>> order

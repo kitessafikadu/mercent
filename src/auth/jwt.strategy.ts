@@ -23,17 +23,24 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: { userId: string; email: string; userType: string }) {
+<<<<<<< HEAD
     console.log('JwtStrategy validate -> payload:', payload);
     if (!payload || !payload.userId) {
       console.error('JwtStrategy validate -> Invalid payload');
       return null; // Returning null will cause `user: false` in JwtAuthGuard
     }
     const user = {
+=======
+    return {
+>>>>>>> order
       userId: payload.userId,
       email: payload.email,
       userType: payload.userType,
     };
+<<<<<<< HEAD
     console.log('JwtStrategy validate -> user:', user);
     return user;
+=======
+>>>>>>> order
   }
 }

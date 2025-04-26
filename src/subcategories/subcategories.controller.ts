@@ -14,9 +14,17 @@ import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+<<<<<<< HEAD
 
 @Controller('subcategories')
 @UseGuards(JwtAuthGuard, RolesGuard)
+=======
+import { ApiBearerAuth } from '@nestjs/swagger';
+
+@Controller('subcategories')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
+>>>>>>> order
 export class SubcategoriesController {
   constructor(private readonly service: SubcategoriesService) {}
 
@@ -27,11 +35,13 @@ export class SubcategoriesController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll() {
     return this.service.findAll();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
