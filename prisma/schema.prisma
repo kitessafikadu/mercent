@@ -48,7 +48,7 @@ enum ListingType {
   BROKERAGE   // Products listed for sale or rental, negotiated via chat
   SERVICE     // Services offered by merchants
 }
-
+  
 enum BrokerageType {
   SALE
   RENT

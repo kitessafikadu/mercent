@@ -18,33 +18,36 @@ import { RolesGuard } from '../auth/roles.guard';
 @Controller('categories')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CategoriesController {
-  constructor(private readonly service: CategoriesService) {}
+  constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
   @Roles('ADMIN')
-  create(@Body() dto: CreateCategoryDto) {
-    return this.service.create(dto);
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoriesService.create(createCategoryDto);
   }
 
   @Get()
   findAll() {
-    return this.service.findAll();
+    return this.categoriesService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+    return this.categoriesService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('ADMIN')
-  update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
-    return this.service.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+  ) {
+    return this.categoriesService.update(id, updateCategoryDto);
   }
 
   @Delete(':id')
   @Roles('ADMIN')
   remove(@Param('id') id: string) {
-    return this.service.remove(id);
+    return this.categoriesService.remove(id);
   }
 }
