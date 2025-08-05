@@ -4,9 +4,13 @@ Mercent is a dual-function platform for online retail and brokerage, built to ad
 ## Features
 
  🛒 Ecommerce and Brokerage Support – Unified system for managing both product listings and service offers.
+ 
  🔐 Role-Based Access Control (RBAC) – Fine-grained permission system ensures secure and controlled access across users.
+ 
  💬 Real-Time Chat Integration – Enables instant messaging between buyers and sellers for better engagement.
+ 
  💳 Payment Gateway Integration – Simplifies online transactions through a local payment provider.
+ 
  📦 RESTful API with NestJS – Clan API with modular design, ideal for scaling.
 
 ## Technologies Used
