@@ -52,7 +52,7 @@ export class ProductsService {
         data: {
           name: data.name,
           price: data.price,
-          listingType: data.listingType as ListingType,
+          listingType: data.listingType,
           quantity: data.quantity,
           attributes,
           subcategory: {
@@ -179,7 +179,7 @@ export class ProductsService {
   async update(id: string, data: UpdateProductDto & { imageUrl?: string }) {
     if (
       data.listingType &&
-      !Object.values(ListingType).includes(data.listingType as ListingType)
+      !Object.values(ListingType).includes(data.listingType)
     ) {
       throw new BadRequestException(
         `Invalid listing type: ${data.listingType}`,
