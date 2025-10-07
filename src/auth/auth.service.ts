@@ -36,13 +36,9 @@ export class AuthService {
         phoneNumber: dto.phoneNumber,
         address: dto.address,
         userType: dto.userType,
-<<<<<<< HEAD
-        userStatus: 'ACTIVE',
-=======
         userStatus: 'INACTIVE',
         otp,
         otpExpires,
->>>>>>> order
       },
     });
 
