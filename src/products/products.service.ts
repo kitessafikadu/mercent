@@ -52,16 +52,6 @@ export class ProductsService {
         data: {
           name: data.name,
           price: data.price,
-<<<<<<< HEAD
-          listingType: data.listingType as ListingType, // Cast to ListingType
-          attributes: data.attributes || {},
-
-          // Updated Relation: Connect to the correct subcategory
-          subcategory: { connect: { id: data.subcategoryId } },
-
-          // Connect to the user
-          user: { connect: { id: data.userId } },
-=======
           listingType: data.listingType as ListingType,
           quantity: data.quantity,
           attributes,
@@ -73,7 +63,6 @@ export class ProductsService {
           user: {
             connect: { id: userId },
           },
->>>>>>> order
         },
       });
 
@@ -111,30 +100,12 @@ export class ProductsService {
         },
       });
     } catch (error) {
-<<<<<<< HEAD
-      console.error('Error creating product:', error);
-      throw new InternalServerErrorException(
-        `Error creating product: ${error.message}`,
-      );
-=======
       console.error('Product creation failed:', error);
       throw new InternalServerErrorException('Failed to create product');
->>>>>>> order
     }
   }
 
   async findAll() {
-<<<<<<< HEAD
-    return this.prisma.product.findMany({
-      include: {
-        subcategory: {
-          include: {
-            parent: true, // Include parent subcategories if needed
-            children: true, // Include child subcategories if needed
-          },
-        },
-        user: true, // Include user details
-=======
     return await this.prisma.product.findMany({
       select: {
         id: true,
@@ -162,7 +133,6 @@ export class ProductsService {
             },
           },
         },
->>>>>>> order
       },
     });
   }
@@ -170,16 +140,6 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-<<<<<<< HEAD
-      include: {
-        subcategory: {
-          include: {
-            parent: true, // Include parent subcategories if needed
-            children: true, // Include child subcategories if needed
-          },
-        },
-        user: true, // Include user details
-=======
       select: {
         id: true,
         name: true,
@@ -206,7 +166,6 @@ export class ProductsService {
             },
           },
         },
->>>>>>> order
       },
     });
 
@@ -251,7 +210,7 @@ export class ProductsService {
 
     const updateData: any = {
       name: data.name,
-      subCategoryId: data.subCategoryId,
+      subcategoryId: data.subCategoryId,
       price,
       listingType: data.listingType as ListingType,
       attributes: Object.keys(attributes).length ? attributes : undefined,
@@ -262,17 +221,6 @@ export class ProductsService {
     try {
       const updated = await this.prisma.product.update({
         where: { id },
-<<<<<<< HEAD
-        data: {
-          name: data.name,
-          subcategory: data.subcategoryId
-            ? { connect: { id: data.subcategoryId } }
-            : undefined,
-          user: data.userId ? { connect: { id: data.userId } } : undefined,
-          price: data.price,
-          listingType: data.listingType as ListingType,
-          attributes: data.attributes ? { ...data.attributes } : undefined,
-=======
         data: updateData,
       });
 
@@ -304,7 +252,6 @@ export class ProductsService {
               },
             },
           },
->>>>>>> order
         },
       });
     } catch (error) {

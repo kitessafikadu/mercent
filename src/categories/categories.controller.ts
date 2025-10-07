@@ -14,15 +14,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-<<<<<<< HEAD
-
-@Controller('categories')
-@UseGuards(JwtAuthGuard, RolesGuard)
-export class CategoriesController {
-  constructor(private readonly service: CategoriesService) {}
-=======
 import { ApiBearerAuth } from '@nestjs/swagger';
->>>>>>> order
 
 @Controller('categories')
 @UseGuards(JwtAuthGuard, RolesGuard)
