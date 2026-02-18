@@ -52,7 +52,7 @@ export class ProductsService {
         data: {
           name: data.name,
           price: data.price,
-          listingType: data.listingType as ListingType,
+          listingType: data.listingType,
           quantity: data.quantity,
           attributes,
           subcategory: {
@@ -179,7 +179,7 @@ export class ProductsService {
   async update(id: string, data: UpdateProductDto & { imageUrl?: string }) {
     if (
       data.listingType &&
-      !Object.values(ListingType).includes(data.listingType as ListingType)
+      !Object.values(ListingType).includes(data.listingType)
     ) {
       throw new BadRequestException(
         `Invalid listing type: ${data.listingType}`,
@@ -210,7 +210,7 @@ export class ProductsService {
 
     const updateData: any = {
       name: data.name,
-      subCategoryId: data.subCategoryId,
+      subcategoryId: data.subCategoryId,
       price,
       listingType: data.listingType as ListingType,
       attributes: Object.keys(attributes).length ? attributes : undefined,
@@ -255,6 +255,7 @@ export class ProductsService {
         },
       });
     } catch (error) {
+      console.error('Error updating product:', error);
       throw new InternalServerErrorException(
         `Error updating product: ${error.message}`,
       );
@@ -265,6 +266,7 @@ export class ProductsService {
     try {
       return this.prisma.product.delete({ where: { id } });
     } catch (error) {
+      console.error('Error deleting product:', error);
       throw new InternalServerErrorException(
         `Error deleting product: ${error.message}`,
       );
